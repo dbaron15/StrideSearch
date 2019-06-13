@@ -102,7 +102,7 @@ bool MaxAverageCriterion::evaluate(const Workspace& wspc) {
             Real area = 0.0;
             for (int i=0; i<wspc.n; ++i) {
                 val += vardata[i]*weight[i];
-                area += weight[i]*weight[i];
+                area += weight[i];
             }
             val /= area;
             break;

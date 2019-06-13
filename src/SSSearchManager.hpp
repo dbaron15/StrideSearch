@@ -18,9 +18,7 @@
 #include <array>
 #include "SSMPIManager.hpp"
 #include "SSSearchParams.hpp"
-// #ifdef HAVE_MPI
-// #include <mpi.h>
-// #endif
+#include "SSTrackSet.hpp"
 
 namespace StrideSearch {
 
@@ -117,7 +115,7 @@ class SearchManager {
         */
         void runSpatialSearch(const MPIManager& mpi, const SearchParams& params, const Int stop_timestep=-1);
     
-        /// Outputs a delimited file in order of ascending DateTime.
+        /// Outputs spatial search results to a delimited file in order of ascending DateTime.
         /**
             The delimiter is a semicolon ';'.
             If the output is saved to a file, say, "output.txt" it may be read into a Pandas DataFrame in Python with@n
@@ -129,6 +127,11 @@ class SearchManager {
         void outputCSV(std::ostream& os) const;
         
         void printTime() const;
+        
+        void buildTracks(const Real storm_spd_mps, const Real dt_hours, const Int mintracklen=1);
+        
+        void outputTracks(const std::string& base_name, const std::vector<std::string>& descs = 
+            std::vector<std::string>()) const {main_track_set.writeData(base_name, descs);}
     
     protected:
         /// Search domain (rectangle in lat-lon space, in degrees; latitudes between -90 and 90, longitudes between 0 and 360
@@ -139,6 +142,9 @@ class SearchManager {
         SectorSet<DataLayout> main_sector_set;
         /// Primary result from StrideSearch::runSpatialSearch.
         EventSet<DataLayout> main_event_set;
+        
+        TrackSet<DataLayout> main_track_set;
+        
         /// Array of time values read from the current file.
         RealArray file_time;
         
