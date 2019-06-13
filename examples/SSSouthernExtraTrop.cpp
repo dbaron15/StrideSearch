@@ -77,7 +77,17 @@ int main(int argc, char* argv[]) {
     std::ofstream outfile(input.ofilename);
     search.outputCSV(outfile);
     outfile.close();
+
+    std::vector<std::string> descs;
+    for (auto& c : criteria) {
+        descs.push_back(c->description());
+    }
+    search.buildTracks(15, 6, 3);
+    search.outputTracks("extratrop_example", descs);
+
+return 0;
 }
+
 
 void ExTropInput::parse_args(const int argc, char* argv[]) {
     filelist_fname = "ERAinterim_extratrop_grad.nc";
