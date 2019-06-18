@@ -91,16 +91,16 @@ return 0;
 
 void ExTropInput::parse_args(const int argc, char* argv[]) {
     filelist_fname = "ERAinterim_extratrop_grad.nc";
-    sb = 20;
+    sb = 35;
     nb = 40;
     wb = 280;
-    eb = 310;
+    eb = 300;
     sec_radius = 500;
-    psl_max = 99000;
+    psl_max = 99500;
     grad_min = 0.22;
     time_units = DTUnits::HOURS;
     timestep_stride = 1;
-    stop_timestep = 124;
+    stop_timestep = -1;
     start_year = 1900;
     start_month = 1;
     ofilename = "so_extratrop_results.txt";
