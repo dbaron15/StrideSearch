@@ -94,7 +94,7 @@ void ExTropInput::parse_args(const int argc, char* argv[]) {
     sb = 35;
     nb = 40;
     wb = 280;
-    eb = 300;
+    eb = 290;
     sec_radius = 500;
     psl_max = 99500;
     grad_min = 0.22;
