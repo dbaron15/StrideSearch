@@ -5,9 +5,12 @@
 #include "SSSearchManager.hpp"
 #include "SSInput.hpp"
 #include <memory>
+#include <string>
 #include <iostream>
+#include <iomanip>
 #include <fstream>
 #include <sstream>
+#include <vector>
 
 /**
     @file 
@@ -90,11 +93,12 @@ return 0;
 
 
 void ExTropInput::parse_args(const int argc, char* argv[]) {
-    filelist_fname = "ERAinterim_extratrop_grad.nc";
-    sb = 35;
-    nb = 40;
-    wb = 280;
-    eb = 290;
+    data_dir = "/Users/deanabaron/Desktop/dataTemp";
+    filelist_fname = "full_ERA_2005-2008.nc";
+    sb = 28;
+    nb = 52;
+    wb = 270;
+    eb = 320;
     sec_radius = 500;
     psl_max = 99500;
     grad_min = 0.22;

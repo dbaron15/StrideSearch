@@ -53,24 +53,27 @@ lons, lats = np.meshgrid(ncd.variables['lon'][:], ncd.variables['lat'][:])
 #cb = m.colorbar(cp)
 #cb.set_label('hPa')
 
-for df in trks:
-    fig = plt.figure()
-    fig.hold(True)
-    # m = Basemap(projection="ortho", lat_0 = 30, lon_0 = 200, resolution = 'l')
-    m = Basemap(llcrnrlat=20.0, llcrnrlon=265.0, urcrnrlat=50.0, urcrnrlon=315.0, projection='merc', resolution='l')
 
-    m.drawcoastlines()
-    m.drawcountries()
-    m.fillcontinents(color='white', lake_color='white')
-    # m.drawmapboundary(fill_color='aqua')
-    m.drawmeridians(np.arange(-95, -35, 10), labels=[0, 0, 0, 1])
-    m.drawparallels(np.arange(15, 55, 10), labels=[1, 0, 0, 0])
+fig = plt.figure()
+fig.hold(True)
+# m = Basemap(projection="ortho", lat_0 = 30, lon_0 = 200, resolution = 'l')
+m = Basemap(llcrnrlat=10.0, llcrnrlon=255.0, urcrnrlat=65.0, urcrnrlon=330.0, projection='merc', resolution='l')
+
+m.drawcoastlines()
+m.drawcountries()
+m.fillcontinents(color='white', lake_color='white')
+# m.drawmapboundary(fill_color='aqua')
+m.drawmeridians(np.arange(-95, -35, 10), labels=[0, 0, 0, 1])
+m.drawparallels(np.arange(15, 65, 10), labels=[1, 0, 0, 0])
+
+for df in trks:
     trkLon = [df['lon'][j] for j in range(len(df['lon']))]
     trkLat = [df['lat'][i] for i in range(len(df['lat']))]
     m.plot(trkLon, trkLat, linewidth=2, latlon=True)
-    plt.title(str(df.datetime[0]) + "-" + str(df.datetime[len(df)-1]))
 
-plt.show()
+plt.savefig('/Users/deanabaron/Desktop/dataTemp/Full 3 years figures/fullmapoftracks.png')
+
+#plt.show()
 #plt.title("PS " + str(plotDate))
 #fig.savefig('ssDemoPlot.png', bbox_inches='tight')
 
