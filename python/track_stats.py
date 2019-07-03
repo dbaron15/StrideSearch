@@ -4,6 +4,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from mpl_toolkits.basemap import Basemap
 from sklearn.neighbors import KernelDensity
+from scipy.stats.kde import gaussian_kde
 from netCDF4 import Dataset
 
 # gather the track files and compile into dataframe
@@ -50,36 +51,44 @@ trks['month'] = trks['datetime'].apply(lambda x: x.month)
 # #plt.show()
 
 # track density using KDE?
-datafilename = '/Users/deanabaron/StrideSearch/testData/ERAinterim_extratrop_grad.nc'
-ncd = Dataset(datafilename, "r")
-Y, X = np.meshgrid(ncd.variables['lon'][:], ncd.variables['lat'][:])
-
-# combine lats and lons together
-trks['latlon'] = zip(trks.lon, trks.lat)
-
-# Set up the data grid for the contour plot
-#X, Y = trks.lon, trks.lat
-xy = np.vstack([X.ravel(), Y.ravel()]).T
 
 # plot coastlines with basemap
+fig = plt.figure()
+
+def kde2D(x, y, bandwidth, xbins=100j, ybins=100j, **kwargs):
+    """Build 2D kernel density estimate (KDE)."""
+
+    # create grid of sample locations (default: 100x100)
+    xx, yy = np.mgrid[x.min():x.max():xbins,
+                      y.min():y.max():ybins]
+
+    xy_sample = np.vstack([yy.ravel(), xx.ravel()]).T
+    xy_train  = np.vstack([y, x]).T
+
+    kde_skl = KernelDensity(bandwidth=bandwidth, **kwargs)
+    kde_skl.fit(xy_train)
+
+    # score_samples() returns the log-likelihood of the samples
+    z = np.exp(kde_skl.score_samples(xy_sample))
+    return xx, yy, np.reshape(z, xx.shape)
+
 m = Basemap(llcrnrlat=10.0, llcrnrlon=255.0, urcrnrlat=65.0, urcrnrlon=330.0,
             projection='merc', resolution='l')
 m.drawcoastlines()
 m.drawcountries()
-m.fillcontinents(color='white', lake_color='white')
+#m.fillcontinents(color='white', lake_color='white')
 m.drawmeridians(np.arange(-95, -35, 10), labels=[0, 0, 0, 1])
 m.drawparallels(np.arange(15, 65, 10), labels=[1, 0, 0, 0])
 
-# construct a spherical kernel density estimate of the distribution
-kde = KernelDensity(bandwidth=0.03, metric='haversine')
-kde.fit(np.radians(zip(trks.lon, trks.lat)))
+# x, y = trks.lon, trks.lat
+xx, yy, zz = kde2D(trks.lon, trks.lat, 1.0, xbins=50j, ybins=50j)
+#m.scatter(xx, yy, latlon=True)
 
-Z = np.exp(kde.score_samples(xy))
-Z = Z.reshape(X.shape)
+CS = m.contourf(xx, yy, zz, cmap='Reds', latlon=True)
+cbar = m.colorbar(CS)
+cbar.ax.get_yaxis().labelpad = 15
+cbar.ax.set_ylabel("Probability density", rotation=270)
 
-# plot contours of the density
-levels = np.linspace(0, 0.5, 10)
-m.contourf(X, Y, Z, levels=levels, cmap='Reds')
-plt.title("Extratropical Storm Track Density in the North Atlantic, 2005-2008", fontsize=14)
+
+plt.title("Extratropical Storm Track Density in the North Atlantic, 2005-2008")
 plt.show()
-pass
