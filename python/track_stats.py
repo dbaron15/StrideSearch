@@ -49,46 +49,103 @@ trks['month'] = trks['datetime'].apply(lambda x: x.month)
 # ax1.set_xlabel("Month",fontsize=12)
 # ax1.set_ylabel("Number of Storms",fontsize=12)
 # #plt.show()
-
+# ---------------------------------------------------------------------------
 # track density using KDE?
 
 # plot coastlines with basemap
-fig = plt.figure()
+# fig = plt.figure()
+#
+# def kde2D(x, y, bandwidth, xbins=100j, ybins=100j, **kwargs):
+#     """Build 2D kernel density estimate (KDE)."""
+#
+#     # create grid of sample locations (default: 100x100)
+#     xx, yy = np.mgrid[x.min():x.max():xbins,
+#                       y.min():y.max():ybins]
+#
+#     xy_sample = np.vstack([yy.ravel(), xx.ravel()]).T
+#     xy_train  = np.vstack([y, x]).T
+#
+#     kde_skl = KernelDensity(bandwidth=bandwidth, **kwargs)
+#     kde_skl.fit(xy_train)
+#
+#     # score_samples() returns the log-likelihood of the samples
+#     z = np.exp(kde_skl.score_samples(xy_sample))
+#     return xx, yy, np.reshape(z, xx.shape)
+#
+# m = Basemap(llcrnrlat=10.0, llcrnrlon=255.0, urcrnrlat=65.0, urcrnrlon=330.0,
+#             projection='merc', resolution='l')
+# m.drawcoastlines()
+# m.drawcountries()
+# #m.fillcontinents(color='white', lake_color='white')
+# m.drawmeridians(np.arange(-95, -35, 10), labels=[0, 0, 0, 1])
+# m.drawparallels(np.arange(15, 65, 10), labels=[1, 0, 0, 0])
+#
+# # x, y = trks.lon, trks.lat
+# xx, yy, zz = kde2D(trks.lon, trks.lat, 1.0, xbins=50j, ybins=50j)
+# #m.scatter(xx, yy, latlon=True)
+#
+# CS = m.contourf(xx, yy, zz, cmap='Reds', latlon=True)
+# cbar = m.colorbar(CS)
+# cbar.ax.get_yaxis().labelpad = 15
+# cbar.ax.set_ylabel("Probability density", rotation=270)
+#
+#
+# plt.title("Extratropical Storm Track Density in the North Atlantic, 2005-2008")
+# plt.show()
+# ---------------------------------------------------------------------------
+# calculating the deepening of the storms
 
-def kde2D(x, y, bandwidth, xbins=100j, ybins=100j, **kwargs):
-    """Build 2D kernel density estimate (KDE)."""
+df = pd.read_csv(files[0], sep=';')
+df = df.set_index('datetime')
+diff = df.diff()
+diff = diff.drop(columns=['lat', 'lon', 'max(avg(PRESGRAD))'])
 
-    # create grid of sample locations (default: 100x100)
-    xx, yy = np.mgrid[x.min():x.max():xbins,
-                      y.min():y.max():ybins]
+mean = [(diff['min(SLP)'].mean())/6/100]
+maxi = [(diff['min(SLP)'].max())/6/100]
 
-    xy_sample = np.vstack([yy.ravel(), xx.ravel()]).T
-    xy_train  = np.vstack([y, x]).T
+for i in range(1,263):
+    df = pd.read_csv(files[i], sep=';')
+    df = df.set_index('datetime')
+    dff = df.diff()
+    dff = dff.drop(columns=['lat', 'lon', 'max(avg(PRESGRAD))'])
+    diff = diff.append(dff)
+    maxi.append((dff['min(SLP)'].max()) / 100)
+    mean.append((dff['min(SLP)'].mean()) / 100)
 
-    kde_skl = KernelDensity(bandwidth=bandwidth, **kwargs)
-    kde_skl.fit(xy_train)
+diff['dp/dt'] = diff['min(SLP)']
+diff = diff.drop(columns=['min(SLP)'])
 
-    # score_samples() returns the log-likelihood of the samples
-    z = np.exp(kde_skl.score_samples(xy_sample))
-    return xx, yy, np.reshape(z, xx.shape)
+def convert_to_hPa(x):
+    return (x / 6) / 100
 
-m = Basemap(llcrnrlat=10.0, llcrnrlon=255.0, urcrnrlat=65.0, urcrnrlon=330.0,
-            projection='merc', resolution='l')
-m.drawcoastlines()
-m.drawcountries()
-#m.fillcontinents(color='white', lake_color='white')
-m.drawmeridians(np.arange(-95, -35, 10), labels=[0, 0, 0, 1])
-m.drawparallels(np.arange(15, 65, 10), labels=[1, 0, 0, 0])
+diff['dp/dt'] = diff['dp/dt'].apply(convert_to_hPa)
 
-# x, y = trks.lon, trks.lat
-xx, yy, zz = kde2D(trks.lon, trks.lat, 1.0, xbins=50j, ybins=50j)
-#m.scatter(xx, yy, latlon=True)
+bins = pd.cut(diff['dp/dt'], [-18, -16, -14, -12, -10, -8, -6, -4, -2, 0, 2, 4, 6])
 
-CS = m.contourf(xx, yy, zz, cmap='Reds', latlon=True)
-cbar = m.colorbar(CS)
-cbar.ax.get_yaxis().labelpad = 15
-cbar.ax.set_ylabel("Probability density", rotation=270)
+counts = diff.groupby(bins)['dp/dt'].agg(['count'])
 
+# counts.plot()
+# plt.show()
 
-plt.title("Extratropical Storm Track Density in the North Atlantic, 2005-2008")
+# print(mean)
+# def minmax(val_list):
+#     min_val = min(val_list)
+#     max_val = max(val_list)
+#
+#     return (min_val, max_val)
+#
+# print(minmax(mean), minmax(maxi))
+
+plt.hist(maxi, list(range(-10,15)), ec='black')
+plt.xlabel('dp/dt (hPa/hr)')
+plt.ylabel('Count')
+plt.title('Histogram of Max Deepening Rate')
+plt.grid(True)
+plt.show()
+
+plt.hist(mean, list(range(-9, 21)), ec='black')
+plt.xlabel('dp/dt (hPa/hr)')
+plt.ylabel('Count')
+plt.title('Histogram of Mean Deepening Rate')
+plt.grid(True)
 plt.show()
