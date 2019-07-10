@@ -100,8 +100,8 @@ df = df.set_index('datetime')
 diff = df.diff()
 diff = diff.drop(columns=['lat', 'lon', 'max(avg(PRESGRAD))'])
 
-mean = [(diff['min(SLP)'].mean())/6/100]
-maxi = [(diff['min(SLP)'].max())/6/100]
+mean = [((diff['min(SLP)'].mean())/6)/100]
+maxi = [((diff['min(SLP)'].max())/6)/100]
 
 for i in range(1,263):
     df = pd.read_csv(files[i], sep=';')
@@ -109,41 +109,51 @@ for i in range(1,263):
     dff = df.diff()
     dff = dff.drop(columns=['lat', 'lon', 'max(avg(PRESGRAD))'])
     diff = diff.append(dff)
-    maxi.append((dff['min(SLP)'].max()) / 100)
-    mean.append((dff['min(SLP)'].mean()) / 100)
+    maxi.append(((dff['min(SLP)'].max())/6)/100)
+    mean.append(((dff['min(SLP)'].mean(skipna=True))/6)/100)
 
 diff['dp/dt'] = diff['min(SLP)']
 diff = diff.drop(columns=['min(SLP)'])
+diff['datetime'] = diff.index
+diff['datetime'] = pd.to_datetime(diff.datetime)
+diff['month'] = diff['datetime'].apply(lambda x: x.month)
 
 def convert_to_hPa(x):
     return (x / 6) / 100
 
 diff['dp/dt'] = diff['dp/dt'].apply(convert_to_hPa)
 
-bins = pd.cut(diff['dp/dt'], [-18, -16, -14, -12, -10, -8, -6, -4, -2, 0, 2, 4, 6])
-
-counts = diff.groupby(bins)['dp/dt'].agg(['count'])
-
-# counts.plot()
+raw_vals = diff['dp/dt'].to_list()
 # plt.show()
 
-# print(mean)
+#print(mean)
 # def minmax(val_list):
-#     min_val = min(val_list)
-#     max_val = max(val_list)
+#     min_val = np.nanmin(val_list)
+#     max_val = np.nanmax(val_list)
 #
 #     return (min_val, max_val)
 #
-# print(minmax(mean), minmax(maxi))
+# print(minmax(raw_vals))
 
-plt.hist(maxi, list(range(-10,15)), ec='black')
+maxi_range = list(np.linspace(-2,5,29))
+mean_range = list(np.linspace(-2,4,25))
+raw_range = list(np.linspace(-3,4,29))
+
+plt.hist(raw_vals, raw_range, ec='black')
+plt.xlabel('dp/dt (hPa/hr)')
+plt.ylabel('Count')
+plt.title('Histogram of Deepening Rate')
+plt.grid(True)
+plt.show()
+
+plt.hist(maxi, maxi_range, ec='black')
 plt.xlabel('dp/dt (hPa/hr)')
 plt.ylabel('Count')
 plt.title('Histogram of Max Deepening Rate')
 plt.grid(True)
 plt.show()
 
-plt.hist(mean, list(range(-9, 21)), ec='black')
+plt.hist(mean, mean_range, ec='black')
 plt.xlabel('dp/dt (hPa/hr)')
 plt.ylabel('Count')
 plt.title('Histogram of Mean Deepening Rate')
