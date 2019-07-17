@@ -4,6 +4,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from mpl_toolkits.basemap import Basemap
 from sklearn.neighbors import KernelDensity
+from scipy.interpolate import griddata
 from scipy.stats.kde import gaussian_kde
 from netCDF4 import Dataset
 
@@ -19,10 +20,10 @@ trks.columns = ['datetime', 'lat', 'lon', 'min(SLP)', 'max(avg(PRESGRAD))']
 
 # convert datetime and extract month
 trks['datetime'] = pd.to_datetime(trks.datetime)
-trks['month'] = trks['datetime'].apply(lambda x: x.month)
-#
-# #print(trks)
-#
+# trks['month'] = trks['datetime'].apply(lambda x: x.month)
+# #
+# # #print(trks)
+# #
 # # monthly frequency with storms
 #
 # # extract start of every track
@@ -34,9 +35,9 @@ trks['month'] = trks['datetime'].apply(lambda x: x.month)
 # monthly = monthly.drop(columns=['datetime', 'lat', 'lon', 'min(SLP)', 'max(avg(PRESGRAD))'])
 #
 # # insert May
-# monthly.loc[5] = [0]
-# monthly.index = monthly.index + 1
-# monthly = monthly.sort_index()
+# # monthly.loc[5] = [0]
+# # monthly.index = monthly.index + 1
+# # monthly = monthly.sort_index()
 # #print(monthly)
 #
 # # insert month names for labeling
@@ -48,11 +49,11 @@ trks['month'] = trks['datetime'].apply(lambda x: x.month)
 #                   legend=False, x='monthname', y='numstorms', rot=0)
 # ax1.set_xlabel("Month",fontsize=12)
 # ax1.set_ylabel("Number of Storms",fontsize=12)
-# #plt.show()
+# plt.show()
 # ---------------------------------------------------------------------------
-# track density using KDE?
-
-# plot coastlines with basemap
+# # track density using KDE?
+#
+# # plot coastlines with basemap
 # fig = plt.figure()
 #
 # def kde2D(x, y, bandwidth, xbins=100j, ybins=100j, **kwargs):
@@ -92,70 +93,119 @@ trks['month'] = trks['datetime'].apply(lambda x: x.month)
 #
 # plt.title("Extratropical Storm Track Density in the North Atlantic, 2005-2008")
 # plt.show()
-# ---------------------------------------------------------------------------
-# calculating the deepening of the storms
+# # ---------------------------------------------------------------------------
+# plotting pressure changes over time per track
 
-df = pd.read_csv(files[0], sep=';')
-df = df.set_index('datetime')
-diff = df.diff()
-diff = diff.drop(columns=['lat', 'lon', 'max(avg(PRESGRAD))'])
-
-mean = [((diff['min(SLP)'].mean())/6)/100]
-maxi = [((diff['min(SLP)'].max())/6)/100]
-
-for i in range(1,263):
-    df = pd.read_csv(files[i], sep=';')
-    df = df.set_index('datetime')
-    dff = df.diff()
-    dff = dff.drop(columns=['lat', 'lon', 'max(avg(PRESGRAD))'])
-    diff = diff.append(dff)
-    maxi.append(((dff['min(SLP)'].max())/6)/100)
-    mean.append(((dff['min(SLP)'].mean(skipna=True))/6)/100)
-
-diff['dp/dt'] = diff['min(SLP)']
-diff = diff.drop(columns=['min(SLP)'])
-diff['datetime'] = diff.index
-diff['datetime'] = pd.to_datetime(diff.datetime)
-diff['month'] = diff['datetime'].apply(lambda x: x.month)
-
-def convert_to_hPa(x):
-    return (x / 6) / 100
-
-diff['dp/dt'] = diff['dp/dt'].apply(convert_to_hPa)
-
-raw_vals = diff['dp/dt'].to_list()
+# fig = plt.figure()
+# fig.hold(True)
+#
+# for i in range(len(files)):
+#     fig = plt.figure()
+#     df = pd.read_csv(files[i], sep=';')
+#     pressure = [df['min(SLP)'][j] for j in range(len(df['min(SLP)']))]
+#     time = [df['datetime'][i] for i in range(len(df['datetime']))]
+#     plt.plot(time, pressure)
+#     plt.title("Pressure Over Time for Track " + str(df['datetime'][0]) + "-" + str(df['datetime'][len(df)-1]))
+#     plt.savefig('/Users/deanabaron/Desktop/dataTemp/NewNorthAmericanTesting_1004/' +
+#                 str(df['datetime'][0]) + "-" + str(df['datetime'][len(df)-1]) + '.png')
+#
+#
+# # ---------------------------------------------------------------------------
+# # calculating the deepening of the storms
+#
+# df = pd.read_csv(files[0], sep=';')
+# df = df.set_index('datetime')
+# diff = df.diff()
+# diff = diff.drop(columns=['lat', 'lon', 'max(avg(PRESGRAD))'])
+# diff['lat'] = df['lat']
+# diff['lon'] = df['lon']
+#
+# mean = [((diff['min(SLP)'].mean())/6)/100]
+# maxi = [((diff['min(SLP)'].max())/6)/100]
+#
+# for i in range(1,263):
+#     df = pd.read_csv(files[i], sep=';')
+#     df = df.set_index('datetime')
+#     dff = df.diff()
+#     dff = dff.drop(columns=['lat', 'lon', 'max(avg(PRESGRAD))'])
+#     dff['lat'] = df['lat']
+#     dff['lon'] = df['lon']
+#     diff = diff.append(dff)
+#     maxi.append(((dff['min(SLP)'].max())/6)/100)
+#     mean.append(((dff['min(SLP)'].mean(skipna=True))/6)/100)
+#
+# diff['dp/dt'] = diff['min(SLP)']
+# diff = diff.drop(columns=['min(SLP)'])
+#
+# def convert_to_hPa(x):
+#     return (x / 6) / 100
+#
+# diff['dp/dt'] = diff['dp/dt'].apply(convert_to_hPa)
+#
+# raw_max_vals = diff['dp/dt'].to_list()
+# # plt.show()
+#
+# #print(mean)
+# # def minmax(val_list):
+# #     min_val = np.nanmin(val_list)
+# #     max_val = np.nanmax(val_list)
+# #
+# #     return (min_val, max_val)
+# #
+# # print(minmax(raw_vals))
+#
+# maxi_range = list(np.linspace(-2,5,29))
+# mean_range = list(np.linspace(-2,4,25))
+# raw_range = list(np.linspace(-3,4,29))
+#
+# # plt.hist(raw_vals, raw_range, ec='black')
+# # plt.xlabel('dp/dt (hPa/hr)')
+# # plt.ylabel('Count')
+# # plt.title('Histogram of Deepening Rate')
+# # plt.grid(True)
+# # plt.show()
+# #
+# # plt.hist(maxi, maxi_range, ec='black')
+# # plt.xlabel('dp/dt (hPa/hr)')
+# # plt.ylabel('Count')
+# # plt.title('Histogram of Max Deepening Rate')
+# # plt.grid(True)
+# # plt.show()
+# #
+# # plt.hist(mean, mean_range, ec='black')
+# # plt.xlabel('dp/dt (hPa/hr)')
+# # plt.ylabel('Count')
+# # plt.title('Histogram of Mean Deepening Rate')
+# # plt.grid(True)
+# # plt.show()
+#
+# # KDE based on dp/dt?
+# fig = plt.figure()
+#
+# m = Basemap(llcrnrlat=10.0, llcrnrlon=255.0, urcrnrlat=65.0, urcrnrlon=330.0,
+#             projection='merc', resolution='l')
+# m.drawcoastlines()
+# m.drawcountries()
+# #m.fillcontinents(color='white', lake_color='white')
+# m.drawmeridians(np.arange(-95, -35, 10), labels=[0, 0, 0, 1])
+# m.drawparallels(np.arange(15, 65, 10), labels=[1, 0, 0, 0])
+#
+# diff2 = diff.dropna()
+#
+# x = diff2.lon
+# y = diff2.lat
+# z = diff2['dp/dt']
+#
+# xx, yy = np.mgrid[x.min():x.max():50j, y.min():y.max():50j]
+# zz = griddata((x,y), z, (xx, yy),method='nearest')
+#
+# #m.scatter(xx, yy, latlon=True)
+#
+# CS = m.contourf(xx, yy, zz, cmap='RdBu', latlon=True)
+# cbar = m.colorbar(CS)
+# cbar.ax.get_yaxis().labelpad = 15
+# cbar.ax.set_ylabel("Deepening rate (hPa/hr)", rotation=270)
+#
+#
+# plt.title("Extratropical Storm Track Tendency \n in the North Atlantic, 2005-2008")
 # plt.show()
-
-#print(mean)
-# def minmax(val_list):
-#     min_val = np.nanmin(val_list)
-#     max_val = np.nanmax(val_list)
-#
-#     return (min_val, max_val)
-#
-# print(minmax(raw_vals))
-
-maxi_range = list(np.linspace(-2,5,29))
-mean_range = list(np.linspace(-2,4,25))
-raw_range = list(np.linspace(-3,4,29))
-
-plt.hist(raw_vals, raw_range, ec='black')
-plt.xlabel('dp/dt (hPa/hr)')
-plt.ylabel('Count')
-plt.title('Histogram of Deepening Rate')
-plt.grid(True)
-plt.show()
-
-plt.hist(maxi, maxi_range, ec='black')
-plt.xlabel('dp/dt (hPa/hr)')
-plt.ylabel('Count')
-plt.title('Histogram of Max Deepening Rate')
-plt.grid(True)
-plt.show()
-
-plt.hist(mean, mean_range, ec='black')
-plt.xlabel('dp/dt (hPa/hr)')
-plt.ylabel('Count')
-plt.title('Histogram of Mean Deepening Rate')
-plt.grid(True)
-plt.show()

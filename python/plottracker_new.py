@@ -71,7 +71,7 @@ for df in trks:
     trkLat = [df['lat'][i] for i in range(len(df['lat']))]
     m.plot(trkLon, trkLat, linewidth=2, latlon=True)
 
-plt.savefig('/Users/deanabaron/Desktop/dataTemp/Full 3 years figures/fullmapoftracks.png')
+plt.savefig('/Users/deanabaron/Desktop/fullmapoftracks.png')
 
 #plt.show()
 #plt.title("PS " + str(plotDate))

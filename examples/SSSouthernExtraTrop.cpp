@@ -85,7 +85,7 @@ int main(int argc, char* argv[]) {
     for (auto& c : criteria) {
         descs.push_back(c->description());
     }
-    search.buildTracks(15, 6, 3);
+    search.buildTracks(15, 6, 5);
     search.outputTracks("extratrop_example", descs);
 
 return 0;
@@ -100,7 +100,7 @@ void ExTropInput::parse_args(const int argc, char* argv[]) {
     wb = 270;
     eb = 320;
     sec_radius = 500;
-    psl_max = 99500;
+    psl_max = 100400;
     grad_min = 0.22;
     time_units = DTUnits::HOURS;
     timestep_stride = 1;
