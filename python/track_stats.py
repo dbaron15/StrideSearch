@@ -10,16 +10,18 @@ from netCDF4 import Dataset
 
 # gather the track files and compile into dataframe
 files = glob('/Users/deanabaron/StrideSearch/build/*track*.txt')
+#files = glob('/Users/deanabaron/Desktop/dataTemp/NewNorthAmericanTesting_1004/data/*track*.txt')
 
 df = pd.read_csv(files[0], sep=';', skiprows=[0], header=None)
 
-trks = df.append([pd.read_csv(files[i], sep=';', skiprows=[0], header=None) for i in range(1, 263)])
+trks = df.append([pd.read_csv(files[i], sep=';', skiprows=[0], header=None) for i in range(1, 282)])
 
 # add header
 trks.columns = ['datetime', 'lat', 'lon', 'min(SLP)', 'max(avg(PRESGRAD))']
 
 # convert datetime and extract month
 trks['datetime'] = pd.to_datetime(trks.datetime)
+print(trks[trks['min(SLP)'] < 96000.0])
 # trks['month'] = trks['datetime'].apply(lambda x: x.month)
 # #
 # # #print(trks)
@@ -51,9 +53,9 @@ trks['datetime'] = pd.to_datetime(trks.datetime)
 # ax1.set_ylabel("Number of Storms",fontsize=12)
 # plt.show()
 # ---------------------------------------------------------------------------
-# # track density using KDE?
-#
-# # plot coastlines with basemap
+# track density using KDE?
+
+# plot coastlines with basemap
 # fig = plt.figure()
 #
 # def kde2D(x, y, bandwidth, xbins=100j, ybins=100j, **kwargs):
@@ -104,15 +106,17 @@ trks['datetime'] = pd.to_datetime(trks.datetime)
 #     df = pd.read_csv(files[i], sep=';')
 #     pressure = [df['min(SLP)'][j] for j in range(len(df['min(SLP)']))]
 #     time = [df['datetime'][i] for i in range(len(df['datetime']))]
+#     plt.ylim((trks['min(SLP)'].min(), trks['min(SLP)'].max()))
 #     plt.plot(time, pressure)
+#     fig.autofmt_xdate()
 #     plt.title("Pressure Over Time for Track " + str(df['datetime'][0]) + "-" + str(df['datetime'][len(df)-1]))
-#     plt.savefig('/Users/deanabaron/Desktop/dataTemp/NewNorthAmericanTesting_1004/' +
+#     plt.savefig('/Users/deanabaron/Desktop/dataTemp/NewNorthAmericanTesting_LONGERTRACKS/' +
 #                 str(df['datetime'][0]) + "-" + str(df['datetime'][len(df)-1]) + '.png')
-#
-#
-# # ---------------------------------------------------------------------------
-# # calculating the deepening of the storms
-#
+
+
+# ---------------------------------------------------------------------------
+# calculating the deepening of the storms
+
 # df = pd.read_csv(files[0], sep=';')
 # df = df.set_index('datetime')
 # diff = df.diff()
@@ -123,7 +127,7 @@ trks['datetime'] = pd.to_datetime(trks.datetime)
 # mean = [((diff['min(SLP)'].mean())/6)/100]
 # maxi = [((diff['min(SLP)'].max())/6)/100]
 #
-# for i in range(1,263):
+# for i in range(1,282):
 #     df = pd.read_csv(files[i], sep=';')
 #     df = df.set_index('datetime')
 #     dff = df.diff()
@@ -179,7 +183,7 @@ trks['datetime'] = pd.to_datetime(trks.datetime)
 # # plt.grid(True)
 # # plt.show()
 #
-# # KDE based on dp/dt?
+# KDE based on dp/dt?
 # fig = plt.figure()
 #
 # m = Basemap(llcrnrlat=10.0, llcrnrlon=255.0, urcrnrlat=65.0, urcrnrlon=330.0,

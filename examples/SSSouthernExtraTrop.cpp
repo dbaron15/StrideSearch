@@ -94,13 +94,13 @@ return 0;
 
 void ExTropInput::parse_args(const int argc, char* argv[]) {
     data_dir = "/Users/deanabaron/Desktop/dataTemp";
-    filelist_fname = "full_ERA_2005-2008.nc";
-    sb = 28;
-    nb = 52;
+    filelist_fname = "ERAinterim_extratrop_grad.nc";
+    sb = -60;
+    nb = -20;
     wb = 270;
     eb = 320;
     sec_radius = 500;
-    psl_max = 100400;
+    psl_max = 100000;
     grad_min = 0.22;
     time_units = DTUnits::HOURS;
     timestep_stride = 1;
